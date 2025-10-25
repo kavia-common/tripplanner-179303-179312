@@ -4,6 +4,7 @@ import RoomOptions from './RoomOptions';
 import MealsOptions from './MealsOptions';
 import useTripPlan from '../../hooks/useTripPlan';
 import { ROUTES, navigate } from '../../utils/router';
+import BudgetPlans from '../Budget/BudgetPlans';
 
 /**
  * PUBLIC_INTERFACE
@@ -221,6 +222,11 @@ export default function Booking() {
           </div>
         </div>
       </aside>
+
+      {/* Budget plans & detailed taxes/discounts section */}
+      <div style={{ gridColumn: '1 / -1', marginTop: 16 }}>
+        <BudgetPlans />
+      </div>
     </div>
   );
 }
