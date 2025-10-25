@@ -1,82 +1,77 @@
-# Lightweight React Template for KAVIA
+# WanderPlan Frontend (React SPA)
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
+WanderPlan is a single-page trip planning app with a minimalist, classic “Corporate Navy” UI. It uses only React, vanilla CSS, and localStorage. No external APIs or services are required.
 
-## Features
-
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
+Key highlights:
+- Hash-based routing only (no react-router dependency)
+- Local-only state with automatic persistence to localStorage
+- Drag-and-drop using native HTML5 APIs
+- Auth implemented fully client-side with salted SHA-256 hashing via Web Crypto
 
 ## Getting Started
 
-In the project directory, you can run:
+In the project directory:
 
-### `npm start`
+- npm start
+  Runs the app in development mode at http://localhost:3000
 
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- npm test
+  Runs the test suite (non-interactive in CI)
 
-### `npm test`
+- npm run build
+  Builds the production bundle
 
-Launches the test runner in interactive watch mode.
+Note: The app uses hash-based routes. The index bootstraps to #/login if no session is found.
 
-### `npm run build`
+## Core Flows
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Authentication:
+  - Login and Signup are implemented purely on the client. Passwords are salted and hashed with Web Crypto and stored with a per-user salt in localStorage.
+  - Successful login sets a session in localStorage, which gates access to the Planner and other routes.
 
-## Customization
+- Planner (Board + Sidebar):
+  - Board shows Day columns with an “+ Add Day” affordance.
+  - Sidebar hosts the Activity Pool where you can create, edit, delete, and drag activities into days.
+  - All changes persist to localStorage under the versioned key wanderplan.trip.v1.
 
-### Colors
+- Destinations:
+  - Browses curated destinations with placeholder Unsplash images (by topic keywords). No fetch is required; images are referenced by URL.
+  - Selecting a destination writes a selectedDestination snapshot into tripMeta and navigates to Booking.
 
-The main brand colors are defined as CSS variables in `src/App.css`:
+- Booking and Budget:
+  - Booking captures nights, people, room type, and meal plan and shows a live subtotal preview.
+  - Budget shows suggested plans and full breakdown (discounts, taxes, fees). Selecting a plan stores a pricingSnapshot.
+  - Both are hash-routes and do not call any external APIs.
 
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
-```
+Routes:
+- #/login
+- #/signup
+- #/app (Planner)
+- #/destinations
+- #/booking
+- #/budget (Budget section on Booking page)
 
-### Components
+## Tests
 
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
+We provide smoke tests that do not rely on any external services:
+- src/App.test.js
+  - Verifies unauthenticated auth views, authenticated planner, navigation to Destinations, and Booking/Budget pages using hash routing.
+- src/components/Board/__tests__/Board.test.js
+  - Renders Board with seeded localStorage; checks days and activity presence; verifies “+ Add Day” adds a new day.
+- src/components/Sidebar/__tests__/ActivityPool.test.js
+  - Seeds pool items; validates creation, filtering, editing, and deleting activities in the pool.
 
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
+How to run:
+- CI:
+  npm test -- --watchAll=false
+- Local interactive:
+  npm test
 
-## Learn More
+These tests manipulate window.location.hash and localStorage directly to remain isolated and deterministic.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Notes
 
-### Code Splitting
+- If you clear localStorage, the app seeds a sample trip on first run unless it detects prior data.
+- The theme can be toggled in the header. CSS variables in src/theme.css control colors and tokens.
+- Because routing is hash-based, deep linking does not require any server configuration.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
