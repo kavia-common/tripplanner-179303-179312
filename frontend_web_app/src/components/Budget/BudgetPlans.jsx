@@ -56,9 +56,11 @@ export default function BudgetPlans() {
     [baseNight, nights, people]
   );
 
-  const [selectedPlanId, setSelectedPlanId] = useState(null);
+  // Initialize selected plan from previously saved pricingSnapshot if exists
+  const initialSelectedPlanId = tripMeta?.pricingSnapshot?.selectedPlanId || null;
+  const [selectedPlanId, setSelectedPlanId] = useState(initialSelectedPlanId);
 
-  // Persist selected plan into tripMeta
+  // Persist selected plan into tripMeta, including totals snapshot
   const persistSelectedPlan = (plan) => {
     if (!plan) return;
     try {
@@ -66,14 +68,34 @@ export default function BudgetPlans() {
       const payload = raw ? JSON.parse(raw) : null;
       const data = payload?.data || null;
       if (data && data.tripMeta) {
+        // Recompute totals for the chosen plan using the current context,
+        // so snapshot reflects up-to-date discounts and taxes.
+        const base = computeBaseSubtotals({
+          nights,
+          people,
+          baseNightPrice: baseNight,
+          roomType: plan.roomType,
+          mealPlan: plan.mealPlan,
+          mealPrices: DEFAULT_MEAL_PRICES,
+        });
+        const { discounts, discountedSubtotal } = applyDiscounts(base, { nights, people, mealPlan: plan.mealPlan });
+        const taxes = computeTaxesAndFees(discountedSubtotal, { nights });
+        const grandTotal = discountedSubtotal + taxes.totalTaxesAndFees;
+        const snapshotTotals = {
+          ...base,
+          discounts,
+          discountedSubtotal,
+          taxes,
+          grandTotal,
+        };
+
         data.tripMeta = {
           ...data.tripMeta,
           roomType: plan.roomType,
           mealPlan: { ...plan.mealPlan },
-          // store snapshot for review
           pricingSnapshot: {
             selectedPlanId: plan.id,
-            totals: plan.totals,
+            totals: snapshotTotals,
             calculatedAt: new Date().toISOString(),
           },
         };
