@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { formatCurrency, buildSuggestedPlans, computeBaseSubtotals, applyDiscounts, computeTaxesAndFees, DEFAULT_MEAL_PRICES } from '../../utils/pricing';
+import {
+  formatCurrency,
+  buildSuggestedPlans,
+  computeBaseSubtotals,
+  applyDiscounts,
+  computeTaxesAndFees,
+  DEFAULT_MEAL_PRICES
+} from '../../utils/pricing';
 import useTripPlan from '../../hooks/useTripPlan';
 import { ROUTES, navigate } from '../../utils/router';
 
@@ -43,7 +50,7 @@ export default function BudgetPlans() {
     return { base, discounts, taxes, grandTotal };
   }, [nights, people, baseNight, roomType, mealPlan]);
 
-  // Suggested plan cards
+  // Suggested plan cards derived from pricing tiers and booking context
   const suggestions = useMemo(
     () => buildSuggestedPlans({ baseNightPrice: baseNight, nights, people }),
     [baseNight, nights, people]
@@ -81,6 +88,7 @@ export default function BudgetPlans() {
     }
   };
 
+  // When a plan is chosen, immediately persist to tripMeta
   useEffect(() => {
     if (!selectedPlanId) return;
     const found = suggestions.find((s) => s.id === selectedPlanId);
@@ -88,7 +96,17 @@ export default function BudgetPlans() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPlanId]);
 
-  const goPlanner = () => navigate(ROUTES.APP);
+  // Confirm and navigate: ensure selected plan is stored, then go to Planner
+  const confirmAndGoPlanner = () => {
+    if (!selectedPlanId) return;
+    const found = suggestions.find((s) => s.id === selectedPlanId);
+    if (found) {
+      persistSelectedPlan(found);
+    }
+    navigate(ROUTES.APP);
+  };
+
+  const goBackToPlanner = () => navigate(ROUTES.APP);
 
   return (
     <div className="wp-booking" style={{ gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -161,7 +179,7 @@ export default function BudgetPlans() {
           </div>
 
           <div className="wp-actions">
-            <button className="btn btn-outline" type="button" onClick={goPlanner}>
+            <button className="btn btn-outline" type="button" onClick={goBackToPlanner}>
               ← Back to Planner
             </button>
           </div>
@@ -209,7 +227,7 @@ export default function BudgetPlans() {
           <button
             className="btn btn-primary"
             type="button"
-            onClick={goPlanner}
+            onClick={confirmAndGoPlanner}
             disabled={!selectedPlanId}
             aria-disabled={!selectedPlanId}
             title={!selectedPlanId ? 'Select a plan to continue' : 'Proceed to Planner'}
