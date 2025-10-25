@@ -105,7 +105,7 @@ function ActivityPool() {
         {filtered.length === 0 ? (
           <div className="wp-empty">
             <span className="wp-empty-icon" aria-hidden="true">📦</span>
-            <span className="wp-empty-text">No activities in pool</span>
+            <span className="wp-empty-text">No activities yet — add one above to start.</span>
           </div>
         ) : (
           filtered.map((a, idx) => (

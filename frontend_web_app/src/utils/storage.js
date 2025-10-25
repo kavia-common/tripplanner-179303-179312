@@ -4,6 +4,8 @@
 // PUBLIC_INTERFACE
 export const STORAGE_KEYS = {
   TRIP_PLAN: 'wanderplan.trip.v1',
+  ONBOARDING_SEEN: 'wanderplan.onboarding.seen.v1',
+  SEEDED_SAMPLE: 'wanderplan.sample.seeded.v1',
 };
 
 export const CURRENT_SCHEMA_VERSION = 1;
@@ -79,4 +81,22 @@ export function readVersionedPayload(payload) {
     return { valid: false, version, data: null };
   }
   return { valid: true, version, data: payload.data ?? null };
+}
+
+// PUBLIC_INTERFACE
+export function getFlag(key) {
+  /** Get a boolean flag (stored as '1') from localStorage. */
+  const raw = typeof window !== 'undefined' ? window.localStorage.getItem(key) : null;
+  return raw === '1';
+}
+
+// PUBLIC_INTERFACE
+export function setFlag(key, value = true) {
+  /** Set a boolean flag in localStorage. */
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(key, value ? '1' : '0');
+  } catch {
+    // ignore
+  }
 }

@@ -75,7 +75,7 @@ function DayColumn({ dayId, title, date, activities = [] }) {
         {activities.length === 0 ? (
           <div className="wp-empty">
             <span className="wp-empty-icon" aria-hidden="true">🗺️</span>
-            <span className="wp-empty-text">No activities yet</span>
+            <span className="wp-empty-text">Drag activities here from the pool</span>
           </div>
         ) : (
           activities.map((act, idx) => (
