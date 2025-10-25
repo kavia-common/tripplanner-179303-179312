@@ -8,6 +8,20 @@
   padding-bottom: 4px;
 }
 
+/* Drag & Drop States */
+.wp-day-column[data-dnd-over="true"],
+.wp-activities[data-dnd-over="true"] {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: -4px;
+  background: linear-gradient(0deg, var(--color-primary-weak), var(--color-primary-weak));
+}
+
+.wp-activity-card[aria-grabbed="true"] {
+  opacity: 0.75;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
 /* Day Column */
 .wp-day-column {
   background: var(--color-surface);

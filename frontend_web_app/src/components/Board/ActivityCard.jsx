@@ -1,4 +1,5 @@
 import React from 'react';
+import { useDraggable, buildDragPayload } from '../../dnd/useDragDrop';
 
 /**
  * @typedef Activity
@@ -13,16 +14,38 @@ import React from 'react';
 /**
  * PUBLIC_INTERFACE
  * ActivityCard
- * A compact, clickable card representing an itinerary activity.
+ * A compact, clickable and draggable card representing an itinerary activity.
  * Props:
  * - activity: Activity
  * - onClick?: function
+ * - dndSource: { type: 'pool' | 'day', dayId?: string, index: number }
+ * - onTouchMoveTo?: () => void  // Optional touch fallback action (e.g., open Move to… UI)
  */
-function ActivityCard({ activity, onClick }) {
+function ActivityCard({ activity, onClick, dndSource, onTouchMoveTo }) {
   const { title, time, location, note, emoji } = activity || {};
+
+  // Prepare drag payload
+  const source = dndSource?.type === 'pool' ? 'pool' : `day:${dndSource?.dayId ?? ''}`;
+  const payloadObj = {
+    activityId: String(activity?.id ?? ''),
+    source,
+    index: Number(dndSource?.index ?? 0),
+  };
+  const { draggableProps } = useDraggable({
+    payload: buildDragPayload(payloadObj),
+    getPreviewText: () => `${title || 'Activity'} • Move`,
+  });
+
   return (
-    <article className="wp-activity-card" role="button" tabIndex={0} onClick={onClick}
-      onKeyDown={(e) => { if (e.key === 'Enter') onClick?.(); }}>
+    <article
+      className="wp-activity-card"
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => { if (e.key === 'Enter') onClick?.(); }}
+      {...draggableProps}
+      aria-label={`${title || 'Activity'}${time ? ` at ${time}` : ''} — draggable`}
+    >
       <div className="wp-activity-left">
         <div className="wp-activity-icon" aria-hidden="true">
           {emoji || '📍'}
@@ -39,6 +62,16 @@ function ActivityCard({ activity, onClick }) {
             {note && <span className="wp-activity-note">{note}</span>}
           </div>
         )}
+        <div style={{ marginTop: 6, display: 'flex', gap: 8 }}>
+          <button
+            type="button"
+            className="btn btn-plain"
+            onClick={(e) => { e.stopPropagation(); onTouchMoveTo?.(); }}
+            aria-label="Move to…"
+          >
+            Move to…
+          </button>
+        </div>
       </div>
     </article>
   );

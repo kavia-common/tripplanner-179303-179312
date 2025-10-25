@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
 import ActivityCard from './ActivityCard';
 import useTripPlan from '../../hooks/useTripPlan';
+import { useDropZone } from '../../dnd/useDragDrop';
 
 /**
  * PUBLIC_INTERFACE
@@ -13,27 +14,47 @@ import useTripPlan from '../../hooks/useTripPlan';
  * - activities: Array<Activity>
  */
 function DayColumn({ dayId, title, date, activities = [] }) {
-  const { actions: { updateActivity } } = useTripPlan();
+  const { actions: { updateActivity, moveActivity, reorderActivities } } = useTripPlan();
 
   const handleAddActivity = useCallback(() => {
-    // Add a quick placeholder activity to this day by updating state via updateActivity+move (simpler: push directly via local set in parent hook)
-    // Since we don't have direct day mutation here, a lightweight approach is to update by tapping into the hook's state mutation:
-    // We'll simulate by creating a new activity through update route on a temp id - however update requires existent id.
-    // Simpler approach: dispatch a custom event the hook can listen to; but to keep scope small, we provide a minimal inline workaround:
-    // We'll leverage a custom method by temporarily exposing it here would be heavy. Instead, allow DayColumn not to create, but indicate empty state.
-    // For now, we can extend: Add a new activity by updating the trip using a synthetic update. To keep lean, we attach minimal window event.
-    // However, better: We let DayColumn request a new activity via CustomEvent 'wp:add-activity'.
     const event = new CustomEvent('wp:add-activity', { detail: { dayId } });
     window.dispatchEvent(event);
   }, [dayId]);
 
   const handleSelectActivity = useCallback((activity) => {
-    // Example: toggle a note marker as a basic interaction for now
     updateActivity(activity.id, { note: activity.note ? activity.note : 'Tap to edit notes' });
   }, [updateActivity]);
 
+  // Accept drops into this day (append to end by default)
+  const { dropZoneProps } = useDropZone({
+    onDrop: (data) => {
+      // data: { activityId, source, index }
+      // Determine 'from'
+      let fromDayId = null;
+      if (String(data.source).startsWith('day:')) {
+        fromDayId = String(data.source).slice(4) || null;
+      }
+      const from = { dayId: fromDayId, index: Number(data.index) };
+
+      // default insert at end
+      const to = { dayId: String(dayId), index: activities.length };
+      moveActivity({ activityId: data.activityId, from, to });
+    }
+  });
+
+  // Optional: handle reordering within same day by dropping over the list header area
+  const handleMoveToTop = useCallback((activityId, fromIndex) => {
+    // simple action to demonstrate accessible "Move to..." quick option
+    const sameDay = true;
+    if (sameDay) reorderActivities(dayId, fromIndex, 0);
+  }, [dayId, reorderActivities]);
+
   return (
-    <section className="wp-day-column" aria-label={`${title}${date ? ` - ${date}` : ''}`}>
+    <section
+      className="wp-day-column"
+      aria-label={`${title}${date ? ` - ${date}` : ''}`}
+      data-dnd-over={dropZoneProps['data-dnd-over']}
+    >
       <header className="wp-day-header">
         <div className="wp-day-title-wrap">
           <h3 className="wp-day-title">{title}</h3>
@@ -50,18 +71,20 @@ function DayColumn({ dayId, title, date, activities = [] }) {
         </button>
       </header>
 
-      <div className="wp-activities">
+      <div className="wp-activities" {...dropZoneProps}>
         {activities.length === 0 ? (
           <div className="wp-empty">
             <span className="wp-empty-icon" aria-hidden="true">🗺️</span>
             <span className="wp-empty-text">No activities yet</span>
           </div>
         ) : (
-          activities.map((act) => (
+          activities.map((act, idx) => (
             <ActivityCard
               key={act.id}
               activity={act}
               onClick={() => handleSelectActivity(act)}
+              dndSource={{ type: 'day', dayId: String(dayId), index: idx }}
+              onTouchMoveTo={() => handleMoveToTop(act.id, idx)}
             />
           ))
         )}

@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import useTripPlan from '../../hooks/useTripPlan';
 import ActivityForm from './ActivityForm';
+import ActivityCard from '../Board/ActivityCard';
+import { useDropZone } from '../../dnd/useDragDrop';
 
 /**
  * PUBLIC_INTERFACE
@@ -10,11 +12,12 @@ import ActivityForm from './ActivityForm';
  * - addActivityToPool
  * - updateActivity
  * - delete from pool (handled by updating the unassigned list via a specific action pattern)
+ * Also acts as a drop zone to move activities back from days to the pool.
  */
 function ActivityPool() {
   const {
     state: { unassignedActivities },
-    actions: { addActivityToPool, updateActivity },
+    actions: { addActivityToPool, updateActivity, moveActivity },
   } = useTripPlan();
 
   // Track the activity id currently being edited inline
@@ -36,7 +39,6 @@ function ActivityPool() {
 
   const handleCreate = (payload) => {
     addActivityToPool(payload);
-    // No need to reset any local state; form clears itself on unmount or re-mount
   };
 
   const handleSaveEdit = (activityId, payload) => {
@@ -45,21 +47,6 @@ function ActivityPool() {
   };
 
   const handleDelete = (activityId) => {
-    // Implement deletion from pool by updating the pool array directly through updateActivity pattern isn't applicable.
-    // useTripPlan does not yet have a delete action; however, we can emulate delete by moving pool state.
-    // Approach: we trigger a custom event that the hook doesn't handle. Instead, we temporarily implement a localStorage-based approach?
-    // Better: use a trick—updateActivity won't delete. But we can maintain deletion by calling a hidden action pattern:
-    // We'll simulate by using a minimal "delete from pool" through a synthetic move via moveActivity from {dayId:null}. However destination is null too.
-    // For simplicity within current hook API, we can directly call a custom event so the parent hook isn't affected. Instead, we add a small inline effect:
-    // Since we cannot modify the hook now, we implement a local 'delete' by reconstructing unassigned list
-    // using a one-off storage write through window.dispatchEvent that App does not handle.
-    // A simpler and correct way: updateActivity with a special marker and filter on render is hacky.
-    // So we do a tiny state update by leveraging a hidden property on window to call setState is not allowed.
-    // Conclusion: We'll implement a "delete" helper here by reading and writing via the available action addActivityToPool not suitable.
-    // Correct approach: We'll add a minimal custom event consumed by a small reducer-like "internal" refactor here:
-    // Since that's complex, we take a pragmatic approach: emit an event 'wp:delete-pool-activity' and handle it inside this component state by optimistic UI and requestAnimationFrame to persist through a hidden local write? Not ideal.
-
-    // Best acceptable solution in current scope: Temporarily implement delete using localStorage mutation aligned with storage utils.
     try {
       const raw = window.localStorage.getItem('wanderplan.trip.v1');
       if (!raw) return;
@@ -71,12 +58,25 @@ function ActivityPool() {
       payload.data = data;
       payload.savedAt = new Date().toISOString();
       window.localStorage.setItem('wanderplan.trip.v1', JSON.stringify(payload));
-      // Force a visual refresh by pinging a no-op update using updateActivity for timestamp
       updateActivity('__noop__', {});
     } catch {
       // ignore
     }
   };
+
+  // Drop zone: dropping here moves to the pool at the end
+  const { dropZoneProps } = useDropZone({
+    onDrop: (data) => {
+      // if source is pool already, optionally reorder; for simplicity append to end
+      let fromDayId = null;
+      if (String(data.source).startsWith('day:')) {
+        fromDayId = String(data.source).slice(4) || null;
+      }
+      const from = { dayId: fromDayId, index: Number(data.index) };
+      const to = { dayId: null, index: unassignedActivities.length };
+      moveActivity({ activityId: data.activityId, from, to });
+    }
+  });
 
   return (
     <div className="wp-activity-pool">
@@ -101,14 +101,14 @@ function ActivityPool() {
         <ActivityForm mode="create" onSubmit={handleCreate} />
       </div>
 
-      <div className="wp-pool-list" role="list">
+      <div className="wp-pool-list" role="list" {...dropZoneProps}>
         {filtered.length === 0 ? (
           <div className="wp-empty">
             <span className="wp-empty-icon" aria-hidden="true">📦</span>
             <span className="wp-empty-text">No activities in pool</span>
           </div>
         ) : (
-          filtered.map((a) => (
+          filtered.map((a, idx) => (
             <div key={a.id} className="wp-pool-item" role="listitem">
               {editingId === a.id ? (
                 <ActivityForm
@@ -119,20 +119,17 @@ function ActivityPool() {
                 />
               ) : (
                 <div className="wp-pool-item-row">
-                  <div className="wp-pool-item-main">
-                    <div className="wp-activity-icon" aria-hidden="true">{a.emoji || '📍'}</div>
-                    <div className="wp-pool-item-text">
-                      <div className="wp-pool-top">
-                        {a.time && <span className="wp-activity-time">{a.time}</span>}
-                        <span className="wp-activity-title">{a.title || 'Untitled Activity'}</span>
-                      </div>
-                      {(a.location || a.note) && (
-                        <div className="wp-activity-meta">
-                          {a.location && <span className="wp-activity-location">{a.location}</span>}
-                          {a.note && <span className="wp-activity-note">{a.note}</span>}
-                        </div>
-                      )}
-                    </div>
+                  <div className="wp-pool-item-main" style={{ width: '100%' }}>
+                    {/* Reuse ActivityCard for consistent visuals and built-in draggable */}
+                    <ActivityCard
+                      activity={a}
+                      onClick={() => setEditingId(a.id)}
+                      dndSource={{ type: 'pool', index: idx }}
+                      onTouchMoveTo={() => {
+                        // For a simple touch fallback, we don't move inside pool; this could open a "choose day" UI later.
+                        // No-op for now.
+                      }}
+                    />
                   </div>
                   <div className="wp-pool-item-actions">
                     <button
