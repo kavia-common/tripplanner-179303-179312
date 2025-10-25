@@ -1,6 +1,29 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { STORAGE_KEYS, loadFromStorage, saveToStorage, makeVersionedPayload, readVersionedPayload } from '../utils/storage';
 
+// Helpers
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function toISODate(d) {
+  if (!(d instanceof Date)) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseISODate(s) {
+  if (!s) return null;
+  const t = new Date(s);
+  return Number.isNaN(t.getTime()) ? null : t;
+}
+
+function addDays(date, n) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
 // Initial default state if nothing in storage
 const DEFAULT_TRIP = {
   tripMeta: {
@@ -50,6 +73,8 @@ function nowIso() {
  * - moveActivity({ activityId, from: { dayId|null, index }, to: { dayId|null, index } })
  * - reorderActivities(dayId, fromIndex, toIndex)
  * - renameTrip(name: string)
+ * - setStartDate(isoDateString)
+ * - setTripLength(length: number)
  */
 export default function useTripPlan() {
   // Load state from localStorage once at mount
@@ -74,6 +99,26 @@ export default function useTripPlan() {
   const [days, setDays] = useState(initial.days);
   const [unassignedActivities, setUnassignedActivities] = useState(initial.unassignedActivities);
 
+  // Recalculate day labels and end date when startDate or day count changes
+  const recalcDates = useCallback((baseStart, currentDays) => {
+    const start = parseISODate(baseStart);
+    let nextDays = [...currentDays];
+    let endDate = '';
+    if (start) {
+      nextDays = nextDays.map((d, idx) => {
+        const date = addDays(start, idx);
+        const label = `${DAY_NAMES[date.getDay()]} ${date.getMonth() + 1}/${date.getDate()}`;
+        return { ...d, title: `Day ${idx + 1}`, date: label };
+      });
+      const end = addDays(start, Math.max(0, nextDays.length - 1));
+      endDate = toISODate(end);
+    } else {
+      nextDays = nextDays.map((d, idx) => ({ ...d, title: `Day ${idx + 1}`, date: d.date || '' }));
+      endDate = '';
+    }
+    return { nextDays, endDate };
+  }, []);
+
   // Persist whenever state changes
   useEffect(() => {
     const payload = {
@@ -93,15 +138,22 @@ export default function useTripPlan() {
         date,
         activities: [],
       };
-      return [...prev, newDay];
+      const updated = [...prev, newDay];
+      // recalc with current tripMeta.startDate
+      const { nextDays, endDate } = recalcDates(tripMeta.startDate, updated);
+      setTripMeta(prevMeta => ({ ...prevMeta, endDate, updatedAt: nowIso() }));
+      return nextDays;
     });
-    setTripMeta(prev => ({ ...prev, updatedAt: nowIso() }));
-  }, []);
+  }, [recalcDates, tripMeta.startDate]);
 
   const removeDay = useCallback((dayId) => {
-    setDays(prev => prev.filter(d => d.id !== dayId));
-    setTripMeta(prev => ({ ...prev, updatedAt: nowIso() }));
-  }, []);
+    setDays(prev => {
+      const updated = prev.filter(d => d.id !== dayId);
+      const { nextDays, endDate } = recalcDates(tripMeta.startDate, updated);
+      setTripMeta(prevMeta => ({ ...prevMeta, endDate, updatedAt: nowIso() }));
+      return nextDays;
+    });
+  }, [recalcDates, tripMeta.startDate]);
 
   const addActivityToPool = useCallback((activityPartial = {}) => {
     setUnassignedActivities(prev => [...prev, createActivity(activityPartial)]);
@@ -203,6 +255,39 @@ export default function useTripPlan() {
     setTripMeta(prev => ({ ...prev, name, updatedAt: nowIso() }));
   }, []);
 
+  // PUBLIC_INTERFACE
+  const setStartDate = useCallback((isoDate) => {
+    setTripMeta(prev => {
+      const { nextDays, endDate } = recalcDates(isoDate, days);
+      setDays(nextDays);
+      return { ...prev, startDate: isoDate, endDate, updatedAt: nowIso() };
+    });
+  }, [days, recalcDates]);
+
+  // PUBLIC_INTERFACE
+  const setTripLength = useCallback((length) => {
+    const n = Math.max(1, Number(length) || 1);
+    setDays(prev => {
+      let updated = [...prev];
+      if (n > prev.length) {
+        const toAdd = n - prev.length;
+        for (let i = 0; i < toAdd; i += 1) {
+          updated.push({
+            id: `day-${Math.random().toString(36).slice(2, 8)}`,
+            title: `Day ${prev.length + i + 1}`,
+            date: '',
+            activities: [],
+          });
+        }
+      } else if (n < prev.length) {
+        updated = updated.slice(0, n);
+      }
+      const { nextDays, endDate } = recalcDates(tripMeta.startDate, updated);
+      setTripMeta(prevMeta => ({ ...prevMeta, endDate, updatedAt: nowIso() }));
+      return nextDays;
+    });
+  }, [recalcDates, tripMeta.startDate]);
+
   return {
     state: { tripMeta, days, unassignedActivities },
     actions: {
@@ -213,6 +298,8 @@ export default function useTripPlan() {
       moveActivity,
       reorderActivities,
       renameTrip,
+      setStartDate,
+      setTripLength,
     },
   };
 }

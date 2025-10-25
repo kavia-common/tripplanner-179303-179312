@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import './theme.css';
+import './components/Header/Header.css';
 import Header from './components/Layout/Header';
 import Sidebar from './components/Layout/Sidebar';
 import OnboardingModal from './components/Onboarding/OnboardingModal';
@@ -19,7 +20,7 @@ function App() {
 
   // Hook for trip plan state/actions
   const {
-    state: { days },
+    state: { days, tripMeta },
     actions: { addDay },
   } = useTripPlan();
 
@@ -116,7 +117,9 @@ function App() {
               <p className="board-subtitle">
                 {days.length === 0
                   ? 'No days yet — use “+ Add Day” to get started.'
-                  : 'Plan your trip by organizing activities by day.'}
+                  : (tripMeta?.startDate
+                      ? `Itinerary: ${tripMeta.startDate}${tripMeta.endDate ? ` → ${tripMeta.endDate}` : ''} • ${days.length} ${days.length === 1 ? 'day' : 'days'}`
+                      : `Plan your trip across ${days.length} ${days.length === 1 ? 'day' : 'days'}.`)}
               </p>
             </div>
             <Board />
