@@ -12,6 +12,7 @@ import { onRouteChange, getCurrentRoute, ROUTES, navigate } from './utils/router
 import { isAuthenticated } from './utils/authStorage';
 import Login from './components/Auth/Login';
 import Signup from './components/Auth/Signup';
+import Destinations from './components/Destinations/Destinations';
 
 // PUBLIC_INTERFACE
 function App() {
@@ -135,6 +136,61 @@ function App() {
   }
 
   // Default: Authenticated app view
+  // Route switching for SPA views
+  if (route === ROUTES.DESTINATIONS) {
+    return (
+      <div className="app-root">
+        <Header theme={theme} onToggleTheme={toggleTheme} authed={authed} />
+        <div className="app-shell">
+          {/* Sidebar hidden on destinations to maximize gallery space */}
+          <div style={{ display: 'none' }} aria-hidden="true" />
+          <main className="app-main">
+            <section className="board-surface">
+              <Destinations />
+            </section>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  if (route === ROUTES.BOOKING) {
+    // Minimal placeholder for booking stage; future steps can replace with full flow
+    return (
+      <div className="app-root">
+        <Header theme={theme} onToggleTheme={toggleTheme} authed={authed} />
+        <div className="app-shell">
+          <Sidebar />
+          <main className="app-main">
+            <section className="board-surface">
+              <div className="board-header">
+                <h2 className="board-title">Booking</h2>
+                <p className="board-subtitle">
+                  {tripMeta?.selectedDestination
+                    ? `Selected: ${tripMeta.selectedDestination.city}, ${tripMeta.selectedDestination.country} • ${tripMeta.selectedDestination.hotel}`
+                    : 'No destination selected yet. Pick one to tailor your booking.'}
+                </p>
+              </div>
+              <div className="board-placeholder">
+                <div className="placeholder-card">Rooms</div>
+                <div className="placeholder-card">Meals</div>
+                <div className="placeholder-card">Offers & Budget</div>
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <button className="btn btn-outline" type="button" onClick={() => navigate(ROUTES.DESTINATIONS)}>
+                  ← Back to Destinations
+                </button>
+                <button className="btn btn-primary" type="button" style={{ marginLeft: 8 }} onClick={() => navigate(ROUTES.APP)}>
+                  Finish and return to Board
+                </button>
+              </div>
+            </section>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-root">
       <Header theme={theme} onToggleTheme={toggleTheme} authed={authed} />
@@ -143,14 +199,23 @@ function App() {
         <main className="app-main">
           <section className="board-surface">
             <div className="board-header">
-              <h2 className="board-title">WanderPlan Board</h2>
-              <p className="board-subtitle">
-                {days.length === 0
-                  ? 'No days yet — use “+ Add Day” to get started.'
-                  : (tripMeta?.startDate
-                      ? `Itinerary: ${tripMeta.startDate}${tripMeta.endDate ? ` → ${tripMeta.endDate}` : ''} • ${days.length} ${days.length === 1 ? 'day' : 'days'}`
-                      : `Plan your trip across ${days.length} ${days.length === 1 ? 'day' : 'days'}.`)}
-              </p>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                <div>
+                  <h2 className="board-title">WanderPlan Board</h2>
+                  <p className="board-subtitle">
+                    {days.length === 0
+                      ? 'No days yet — use “+ Add Day” to get started.'
+                      : (tripMeta?.startDate
+                          ? `Itinerary: ${tripMeta.startDate}${tripMeta.endDate ? ` → ${tripMeta.endDate}` : ''} • ${days.length} ${days.length === 1 ? 'day' : 'days'}`
+                          : `Plan your trip across ${days.length} ${days.length === 1 ? 'day' : 'days'}.`)}
+                  </p>
+                </div>
+                <div>
+                  <button className="btn btn-outline" type="button" onClick={() => navigate(ROUTES.DESTINATIONS)}>
+                    Browse Destinations
+                  </button>
+                </div>
+              </div>
             </div>
             <Board />
           </section>

@@ -8,6 +8,8 @@ export const ROUTES = {
   LOGIN: '#/login',
   SIGNUP: '#/signup',
   APP: '#/app',
+  DESTINATIONS: '#/destinations',
+  BOOKING: '#/booking',
 };
 
 // PUBLIC_INTERFACE

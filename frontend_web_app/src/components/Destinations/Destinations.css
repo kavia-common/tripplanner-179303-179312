@@ -1,0 +1,127 @@
+.wp-destinations-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wp-destinations-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 8px;
+}
+
+.wp-destinations-title {
+  margin: 0;
+  font-size: 20px;
+  color: var(--color-text);
+}
+
+.wp-destinations-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.wp-destinations-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.wp-destinations-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 1024px) {
+  .wp-destinations-grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .wp-destinations-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wp-destination-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.wp-destination-media {
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  background: var(--color-background);
+  object-fit: cover;
+  display: block;
+}
+
+.wp-destination-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wp-destination-name {
+  margin: 0;
+  font-size: 16px;
+  color: var(--color-text);
+}
+
+.wp-destination-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.wp-destination-perks {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.wp-destination-perk {
+  font-size: 11px;
+  color: var(--color-primary);
+  background: var(--color-primary-weak);
+  border: 1px solid rgba(30,58,138,0.18);
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.wp-destination-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn {
+  appearance: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: transform .15s ease, box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+  box-shadow: var(--shadow-sm);
+}
+.btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn:focus-visible { outline: none; box-shadow: var(--focus-ring); border-color: var(--focus-border); }
+.btn-primary { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+.btn-outline { background: var(--color-surface); color: var(--color-primary); border-color: var(--color-primary); }
