@@ -13,6 +13,7 @@ import { isAuthenticated } from './utils/authStorage';
 import Login from './components/Auth/Login';
 import Signup from './components/Auth/Signup';
 import Destinations from './components/Destinations/Destinations';
+import Booking from './components/Booking/Booking';
 
 // PUBLIC_INTERFACE
 function App() {
@@ -155,7 +156,6 @@ function App() {
   }
 
   if (route === ROUTES.BOOKING) {
-    // Minimal placeholder for booking stage; future steps can replace with full flow
     return (
       <div className="app-root">
         <Header theme={theme} onToggleTheme={toggleTheme} authed={authed} />
@@ -171,19 +171,7 @@ function App() {
                     : 'No destination selected yet. Pick one to tailor your booking.'}
                 </p>
               </div>
-              <div className="board-placeholder">
-                <div className="placeholder-card">Rooms</div>
-                <div className="placeholder-card">Meals</div>
-                <div className="placeholder-card">Offers & Budget</div>
-              </div>
-              <div style={{ marginTop: 12 }}>
-                <button className="btn btn-outline" type="button" onClick={() => navigate(ROUTES.DESTINATIONS)}>
-                  ← Back to Destinations
-                </button>
-                <button className="btn btn-primary" type="button" style={{ marginLeft: 8 }} onClick={() => navigate(ROUTES.APP)}>
-                  Finish and return to Board
-                </button>
-              </div>
+              <Booking />
             </section>
           </main>
         </div>
