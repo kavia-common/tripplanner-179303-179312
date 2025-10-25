@@ -1,0 +1,33 @@
+:root {
+  /* Corporate Navy - Light */
+  --color-primary: #1E3A8A;    /* Navy */
+  --color-secondary: #F59E0B;  /* Amber */
+  --color-success: #059669;
+  --color-error: #DC2626;
+
+  --color-background: #F3F4F6; /* Neutral background */
+  --color-surface: #FFFFFF;    /* Cards / surfaces */
+  --color-text: #111827;       /* Slate 900 */
+  --color-text-muted: #6B7280; /* Slate 500 */
+  --color-border: rgba(17, 24, 39, 0.12);
+
+  /* Subtle, on-brand weak background accents */
+  --color-primary-weak: rgba(30, 58, 138, 0.08);
+  --color-secondary-weak: rgba(245, 158, 11, 0.10);
+
+  /* Shadows (fallbacks also set in index.css) */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 6px 14px rgba(17, 24, 39, 0.08);
+  --shadow-lg: 0 16px 30px rgba(17, 24, 39, 0.12);
+}
+
+[data-theme="dark"] {
+  /* Corporate Navy - Dark */
+  --color-background: #0F172A; /* Slate 900-ish */
+  --color-surface: #111827;    /* Slightly lighter surface */
+  --color-text: #E5E7EB;       /* Slate 200 */
+  --color-text-muted: #9CA3AF; /* Slate 400 */
+  --color-border: rgba(229, 231, 235, 0.12);
+  --color-primary-weak: rgba(30, 58, 138, 0.2);
+  --color-secondary-weak: rgba(245, 158, 11, 0.18);
+}
