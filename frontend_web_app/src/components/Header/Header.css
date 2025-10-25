@@ -36,10 +36,13 @@
   min-width: 160px;
   box-shadow: var(--shadow-sm);
 }
+.trip-input::placeholder {
+  color: var(--color-text-muted);
+}
 .trip-input:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-weak);
+  border-color: var(--focus-border);
+  box-shadow: var(--focus-ring);
 }
 .trip-actions {
   margin-left: auto;
@@ -59,6 +62,7 @@
   box-shadow: var(--shadow-sm);
 }
 .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn:focus-visible { outline: none; box-shadow: var(--focus-ring); border-color: var(--focus-border); }
 .btn-primary { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
 .btn-outline { background: var(--color-surface); color: var(--color-primary); border-color: var(--color-primary); }
 .btn-danger { background: var(--color-surface); color: var(--color-error); border-color: rgba(220, 38, 38, .45); }

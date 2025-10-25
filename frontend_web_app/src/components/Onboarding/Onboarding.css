@@ -46,8 +46,19 @@
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--focus-border);
+}
 .btn-primary {
   background: var(--color-primary);
   color: #fff;
   border-color: var(--color-primary);
+}
+.wp-modal a:focus-visible,
+.wp-modal button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--focus-border);
 }

@@ -121,10 +121,15 @@
   box-shadow: var(--shadow-sm);
 }
 
+.wp-input::placeholder,
+.wp-textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
 .wp-input:focus,
 .wp-textarea:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-weak);
+  border-color: var(--focus-border);
+  box-shadow: var(--focus-ring);
 }
 
 .wp-textarea {
@@ -165,6 +170,12 @@
 .btn:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--focus-border);
 }
 
 .btn-primary {
@@ -242,9 +253,16 @@
   border-radius: var(--radius-sm);
   min-height: 100px;
 }
+.wp-empty:focus-within {
+  box-shadow: var(--focus-ring);
+  border-color: var(--focus-border);
+}
 .wp-empty-icon { font-size: 20px; }
 .wp-empty-text { font-size: 13px; }
 
+/* Responsive sidebar behavior:
+   - At <= 768px, sidebar sections can collapse.
+   - Provide a CSS hook .sidebar-collapsed to hide content except headers. */
 @media (max-width: 1024px) {
   .wp-form-grid {
     grid-template-columns: 1fr 80px;
@@ -257,5 +275,12 @@
   }
   .wp-form-grid {
     grid-template-columns: 1fr 80px;
+  }
+  .sidebar-card.sidebar-collapsible .wp-pool-form,
+  .sidebar-card.sidebar-collapsible .wp-pool-list {
+    display: none;
+  }
+  .sidebar-card.sidebar-collapsible .wp-pool-header {
+    cursor: pointer;
   }
 }

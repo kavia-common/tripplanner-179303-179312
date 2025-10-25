@@ -9,6 +9,31 @@
   transition: background 0.25s ease, color 0.25s ease;
 }
 
+/* Global focus visibility for keyboard users */
+:where(button, a, input, textarea, select, [tabindex]) :focus-visible,
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--focus-border);
+}
+
+/* Ensure links have visible focus */
+a:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 6px;
+}
+
+/* Utility: visually hidden (for aria-helper text) */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip: rect(0 0 0 0); clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -50,6 +75,7 @@
   margin: 6px 0 0 0;
   font-size: 14px;
   color: var(--color-text-muted);
+  line-height: 1.4;
 }
 
 .board-placeholder {
