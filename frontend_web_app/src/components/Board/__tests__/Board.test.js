@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import Board from '../Board';
-import '../../..//setupTests';
+import '../../../setupTests';
 
 // Utility to clear/preset storage
 function resetStorage() {

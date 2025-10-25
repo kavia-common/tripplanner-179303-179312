@@ -124,10 +124,11 @@ function App() {
     const handler = (e) => {
       const { dayId } = e.detail || {};
       if (!dayId) {
+        // If no dayId provided, add a new day as a helpful default
         addDay();
         return;
       }
-      // Currently no direct action to add activity to a day in the hook; this will be expanded later.
+      // Placeholder: could open a quick-add UI targeting the provided dayId.
     };
     window.addEventListener('wp:add-activity', handler);
     return () => window.removeEventListener('wp:add-activity', handler);

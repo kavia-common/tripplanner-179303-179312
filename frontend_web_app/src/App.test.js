@@ -70,7 +70,12 @@ describe('App smoke', () => {
     seedSession();
     render(<App />);
 
-    go(ROUTES.BOOKING);
+    // First go to destinations and select one to satisfy guard
+    go(ROUTES.DESTINATIONS);
+    const selectButtons = await screen.findAllByRole('button', { name: /Select/i });
+    // Click the first Select to store selectedDestination and auto-navigate to booking
+    selectButtons[0].click();
+
     // Booking header and preview present
     expect(await screen.findByText(/Booking Options/i)).toBeInTheDocument();
     expect(screen.getByText(/Preview & Subtotal/i)).toBeInTheDocument();

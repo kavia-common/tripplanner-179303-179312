@@ -13,9 +13,13 @@ export const ROUTES = {
   BUDGET: '#/budget', // budget plans section (aliased to Booking page with anchor scroll)
 };
 
-// PUBLIC_INTERFACE
+ // PUBLIC_INTERFACE
 export function getCurrentRoute() {
-  /** Returns the current route (hash) or default APP route if none set. */
+  /**
+   * Returns the current route (hash) or default APP route if none set.
+   * Note: App.js implements guards to reroute unauthenticated users to LOGIN
+   * and booking/budget access requires a selectedDestination.
+   */
   const h = typeof window !== 'undefined' ? window.location.hash : '';
   return h || ROUTES.APP;
 }
