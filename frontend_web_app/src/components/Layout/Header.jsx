@@ -1,13 +1,22 @@
 import React from 'react';
 import TripControls from '../Header/TripControls';
+import { getSession, logout } from '../../utils/authStorage';
+import { navigate, ROUTES } from '../../utils/router';
 
 /**
  * PUBLIC_INTERFACE
  * Header
  * A top navigation bar featuring the WanderPlan brand and the theme toggle control.
- * Renders TripControls as a secondary subheader.
+ * Renders TripControls as a secondary subheader when authenticated.
  */
-function Header({ theme, onToggleTheme }) {
+function Header({ theme, onToggleTheme, authed }) {
+  const session = getSession();
+
+  const onLogout = () => {
+    logout();
+    navigate(ROUTES.LOGIN);
+  };
+
   return (
     <>
       <header className="app-header">
@@ -21,6 +30,11 @@ function Header({ theme, onToggleTheme }) {
           </div>
 
           <div className="header-actions">
+            {authed && session?.email && (
+              <span style={{ color: 'var(--color-text-muted)', fontSize: 13, marginRight: 8 }}>
+                {session.email}
+              </span>
+            )}
             <button
               className="theme-toggle"
               onClick={onToggleTheme}
@@ -29,6 +43,17 @@ function Header({ theme, onToggleTheme }) {
             >
               {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
             </button>
+            {authed && (
+              <button
+                className="btn btn-outline"
+                style={{ marginLeft: 8 }}
+                type="button"
+                onClick={onLogout}
+                aria-label="Log out"
+              >
+                Logout
+              </button>
+            )}
           </div>
         </div>
         <style>{`
@@ -81,7 +106,7 @@ function Header({ theme, onToggleTheme }) {
           }
         `}</style>
       </header>
-      <TripControls />
+      {authed && <TripControls />}
     </>
   );
 }

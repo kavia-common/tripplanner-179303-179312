@@ -8,17 +8,24 @@ import OnboardingModal from './components/Onboarding/OnboardingModal';
 import Board from './components/Board/Board';
 import useTripPlan from './hooks/useTripPlan';
 import { STORAGE_KEYS, getFlag, setFlag, loadFromStorage, saveToStorage, makeVersionedPayload } from './utils/storage';
+import { onRouteChange, getCurrentRoute, ROUTES, navigate } from './utils/router';
+import { isAuthenticated } from './utils/authStorage';
+import Login from './components/Auth/Login';
+import Signup from './components/Auth/Signup';
 
 // PUBLIC_INTERFACE
 function App() {
   /**
    * Root application component responsible for global theme management
    * and the layout shell (Header, Sidebar, Main workspace with Board).
+   * Now includes simple auth gating and hash-based routing.
    */
   const [theme, setTheme] = useState('light');
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [route, setRoute] = useState(getCurrentRoute());
+  const authed = isAuthenticated();
 
-  // Hook for trip plan state/actions
+  // Hook for trip plan state/actions (only used in APP view)
   const {
     state: { days, tripMeta },
     actions: { addDay },
@@ -28,6 +35,23 @@ function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  // Subscribe to route changes
+  useEffect(() => {
+    const unsub = onRouteChange((r) => setRoute(r));
+    return () => unsub && unsub();
+  }, []);
+
+  // Redirect unauthenticated users away from app route
+  useEffect(() => {
+    if (!authed && route === ROUTES.APP) {
+      navigate(ROUTES.LOGIN);
+    }
+    if (authed && (route === ROUTES.LOGIN || route === ROUTES.SIGNUP || route === '')) {
+      navigate(ROUTES.APP);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed, route]);
 
   // On first load, determine onboarding visibility and seed sample content if empty
   useEffect(() => {
@@ -105,9 +129,15 @@ function App() {
     setShowOnboarding(false);
   };
 
+  // Route rendering
+  if (!authed && (route === ROUTES.LOGIN || route === ROUTES.SIGNUP || route === ROUTES.APP)) {
+    return route === ROUTES.SIGNUP ? <Signup /> : <Login />;
+  }
+
+  // Default: Authenticated app view
   return (
     <div className="app-root">
-      <Header theme={theme} onToggleTheme={toggleTheme} />
+      <Header theme={theme} onToggleTheme={toggleTheme} authed={authed} />
       <div className="app-shell">
         <Sidebar />
         <main className="app-main">
