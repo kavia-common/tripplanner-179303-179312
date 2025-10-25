@@ -1,8 +1,8 @@
 //
+//
 // Tiny hash-based router utility for WanderPlan.
 // Handles route changes via location.hash and notifies listeners.
 //
-
 // PUBLIC_INTERFACE
 export const ROUTES = {
   LOGIN: '#/login',
@@ -10,6 +10,7 @@ export const ROUTES = {
   APP: '#/app',
   DESTINATIONS: '#/destinations',
   BOOKING: '#/booking',
+  BUDGET: '#/budget', // budget plans section (aliased to Booking page with anchor scroll)
 };
 
 // PUBLIC_INTERFACE

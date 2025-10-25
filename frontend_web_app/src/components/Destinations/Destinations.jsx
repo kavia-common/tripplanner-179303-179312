@@ -105,8 +105,8 @@ export default function Destinations() {
     } catch {
       // ignore storage errors
     }
-    // Navigate to booking route (will be handled by router; placeholder if booking not implemented yet)
-    navigate(ROUTES.BOOKING || ROUTES.APP);
+    // Navigate to booking route
+    navigate(ROUTES.BOOKING);
   };
 
   const refreshGrid = () => {

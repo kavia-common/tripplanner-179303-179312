@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './Booking.css';
 import RoomOptions from './RoomOptions';
 import MealsOptions from './MealsOptions';
@@ -20,7 +20,7 @@ import BudgetPlans from '../Budget/BudgetPlans';
  * - people: number
  * - mealPlan: { breakfast: boolean, lunch: boolean, dinner: boolean }
  */
-export default function Booking() {
+export default function Booking({ scrollToBudget = false }) {
   const { state: { tripMeta }, actions: { renameTrip } } = useTripPlan();
 
   // Defaults derived from destination price if present
@@ -115,8 +115,39 @@ export default function Booking() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nights, people, roomType, mealPlan]);
 
+  // auto-scroll to budget plans if navigated via #/budget
+  const budgetAnchorRef = useRef(null);
+  useEffect(() => {
+    if (scrollToBudget && budgetAnchorRef.current) {
+      budgetAnchorRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [scrollToBudget]);
+
   const onBack = () => navigate(ROUTES.DESTINATIONS);
-  const onFinish = () => navigate(ROUTES.APP);
+
+  // Optionally seed a couple of activities after finishing if none exist, then go to planner
+  const onFinish = () => {
+    try {
+      const raw = window.localStorage.getItem('wanderplan.trip.v1');
+      const payload = raw ? JSON.parse(raw) : null;
+      const data = payload?.data || null;
+      if (data && Array.isArray(data.days) && data.days.length > 0) {
+        const hasAny = data.days.some(d => (d.activities || []).length > 0) || (data.unassignedActivities || []).length > 0;
+        if (!hasAny) {
+          data.unassignedActivities = [
+            { id: `a-${Math.random().toString(36).slice(2,8)}`, title: 'Hotel Check-in', time: '15:00', location: tripMeta?.selectedDestination?.hotel || 'Hotel', note: '', emoji: '🏨' },
+            { id: `a-${Math.random().toString(36).slice(2,8)}`, title: 'Welcome Dinner', time: '19:30', location: tripMeta?.selectedDestination?.city || 'City Center', note: '', emoji: '🍽️' },
+          ];
+          payload.data = data;
+          payload.savedAt = new Date().toISOString();
+          window.localStorage.setItem('wanderplan.trip.v1', JSON.stringify(payload));
+        }
+      }
+    } catch {
+      // ignore
+    }
+    navigate(ROUTES.APP);
+  };
 
   const hasErrors = !!(errors.nights || errors.people);
 
@@ -183,16 +214,26 @@ export default function Booking() {
 
         <div className="wp-actions">
           <button className="btn btn-outline" type="button" onClick={onBack}>← Back to Destinations</button>
-          <button
-            className="btn btn-primary"
-            type="button"
-            onClick={onFinish}
-            disabled={hasErrors}
-            aria-disabled={hasErrors}
-            title={hasErrors ? 'Fix errors before finishing' : 'Finish and return to Board'}
-          >
-            Finish and return to Board
-          </button>
+          <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+            <button
+              className="btn btn-outline"
+              type="button"
+              onClick={() => navigate(ROUTES.BUDGET)}
+              aria-label="Go to Budget Plans"
+            >
+              View Budget Plans
+            </button>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={onFinish}
+              disabled={hasErrors}
+              aria-disabled={hasErrors}
+              title={hasErrors ? 'Fix errors before finishing' : 'Finish and return to Planner'}
+            >
+              Finish → Planner
+            </button>
+          </div>
         </div>
       </div>
 
@@ -220,14 +261,23 @@ export default function Booking() {
             <span>Estimated Total</span>
             <span>${subtotal.grand}</span>
           </div>
+          <div className="wp-actions">
+            <button
+              className="btn btn-outline"
+              type="button"
+              onClick={() => navigate(ROUTES.BUDGET)}
+              aria-label="Go to Budget Plans"
+            >
+              Choose a Budget Plan →
+            </button>
+          </div>
         </div>
       </aside>
 
       {/* Budget plans & detailed taxes/discounts section */}
-      <div style={{ gridColumn: '1 / -1', marginTop: 16 }}>
+      <div ref={budgetAnchorRef} style={{ gridColumn: '1 / -1', marginTop: 16 }}>
         <BudgetPlans />
       </div>
     </div>
   );
 }
-

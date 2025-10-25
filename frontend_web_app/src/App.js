@@ -20,14 +20,14 @@ function App() {
   /**
    * Root application component responsible for global theme management
    * and the layout shell (Header, Sidebar, Main workspace with Board).
-   * Now includes simple auth gating and hash-based routing.
+   * Includes auth gating and hash-based routing with simple flow guards.
    */
   const [theme, setTheme] = useState('light');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [route, setRoute] = useState(getCurrentRoute());
   const authed = isAuthenticated();
 
-  // Hook for trip plan state/actions (only used in APP view)
+  // Hook for trip plan state/actions
   const {
     state: { days, tripMeta },
     actions: { addDay },
@@ -44,16 +44,29 @@ function App() {
     return () => unsub && unsub();
   }, []);
 
-  // Redirect unauthenticated users away from app route
+  // Route guards & redirects
   useEffect(() => {
-    if (!authed && route === ROUTES.APP) {
-      navigate(ROUTES.LOGIN);
+    // Unauthed: only allow auth routes
+    if (!authed) {
+      if (route !== ROUTES.LOGIN && route !== ROUTES.SIGNUP) {
+        navigate(ROUTES.LOGIN);
+      }
+      return;
     }
+
+    // After login/signup, go to app
     if (authed && (route === ROUTES.LOGIN || route === ROUTES.SIGNUP || route === '')) {
       navigate(ROUTES.APP);
+      return;
+    }
+
+    // Authed: prevent direct access to Booking/Budget without a destination
+    const hasDestination = !!tripMeta?.selectedDestination;
+    if ((route === ROUTES.BOOKING || route === ROUTES.BUDGET) && !hasDestination) {
+      navigate(ROUTES.DESTINATIONS);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authed, route]);
+  }, [authed, route, tripMeta?.selectedDestination]);
 
   // On first load, determine onboarding visibility and seed sample content if empty
   useEffect(() => {
@@ -100,7 +113,6 @@ function App() {
       try {
         saveToStorage(STORAGE_KEYS.TRIP_PLAN, makeVersionedPayload(sample));
         setFlag(STORAGE_KEYS.SEEDED_SAMPLE, true);
-        // soft reload state for current hook users on next mount; current session will still show default until interactions
       } catch {
         // ignore
       }
@@ -131,13 +143,12 @@ function App() {
     setShowOnboarding(false);
   };
 
-  // Route rendering
+  // Auth routes
   if (!authed && (route === ROUTES.LOGIN || route === ROUTES.SIGNUP || route === ROUTES.APP)) {
     return route === ROUTES.SIGNUP ? <Signup /> : <Login />;
   }
 
-  // Default: Authenticated app view
-  // Route switching for SPA views
+  // Destinations route
   if (route === ROUTES.DESTINATIONS) {
     return (
       <div className="app-root">
@@ -148,6 +159,16 @@ function App() {
           <main className="app-main">
             <section className="board-surface">
               <Destinations />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+                <button
+                  className="btn btn-outline"
+                  type="button"
+                  onClick={() => navigate(ROUTES.APP)}
+                  aria-label="Skip to Planner"
+                >
+                  Skip to Planner →
+                </button>
+              </div>
             </section>
           </main>
         </div>
@@ -155,7 +176,8 @@ function App() {
     );
   }
 
-  if (route === ROUTES.BOOKING) {
+  // Booking and Budget routes render the Booking page (Budget anchored)
+  if (route === ROUTES.BOOKING || route === ROUTES.BUDGET) {
     return (
       <div className="app-root">
         <Header theme={theme} onToggleTheme={toggleTheme} authed={authed} />
@@ -171,7 +193,7 @@ function App() {
                     : 'No destination selected yet. Pick one to tailor your booking.'}
                 </p>
               </div>
-              <Booking />
+              <Booking scrollToBudget={route === ROUTES.BUDGET} />
             </section>
           </main>
         </div>
@@ -179,6 +201,7 @@ function App() {
     );
   }
 
+  // Default: Planner (App) route
   return (
     <div className="app-root">
       <Header theme={theme} onToggleTheme={toggleTheme} authed={authed} />
@@ -198,9 +221,18 @@ function App() {
                           : `Plan your trip across ${days.length} ${days.length === 1 ? 'day' : 'days'}.`)}
                   </p>
                 </div>
-                <div>
+                <div style={{ display: 'flex', gap: 8 }}>
                   <button className="btn btn-outline" type="button" onClick={() => navigate(ROUTES.DESTINATIONS)}>
                     Browse Destinations
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    type="button"
+                    onClick={() => navigate(ROUTES.BOOKING)}
+                    aria-label="Go to Booking"
+                    title="Open booking to set room/meals and budget"
+                  >
+                    Booking & Budget →
                   </button>
                 </div>
               </div>
